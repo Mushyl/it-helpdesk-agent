@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+# Make the flat-import modules in src/ importable from the tests.
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-v"

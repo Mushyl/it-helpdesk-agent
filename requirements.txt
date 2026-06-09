@@ -1,0 +1,8 @@
+# Core dependencies for the IT Help Desk Support Agent
+# Install with:  pip install -r requirements.txt
+
+anthropic==0.95.0            # Claude API client (chat / generation)
+sentence-transformers==5.4.1 # Local embeddings (all-MiniLM-L6-v2)
+numpy==2.4.4                 # Dot-product similarity for RAG retrieval
+python-dotenv==1.2.2         # Loads ANTHROPIC_API_KEY from key.env
+streamlit>=1.32,<2.0         # Web frontend (one-file UI, cross-platform)

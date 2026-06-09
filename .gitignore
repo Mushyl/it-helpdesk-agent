@@ -1,0 +1,27 @@
+# Secrets — never commit API keys
+key.env
+.env
+
+# Virtual environment
+venv/
+.venv/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Machine-specific Streamlit credentials (the theme config IS committed)
+.streamlit/credentials.toml
+
+# Generated run reports
+src/runs/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
