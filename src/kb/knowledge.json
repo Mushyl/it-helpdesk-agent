@@ -1,0 +1,122 @@
+[
+  {
+    "id": "password_reset",
+    "text": "To reset your password, visit the self-service portal at https://sso.company.internal/reset. You will receive a verification code on your registered mobile number. Codes expire after 10 minutes. If you do not have access to your registered device, contact the IT Help Desk directly at helpdesk@company.com or call ext. 1000 during business hours (Mon-Fri, 8:00-18:00 CET)."
+  },
+  {
+    "id": "account_locked",
+    "text": "Accounts are automatically locked after 5 consecutive failed login attempts. To unlock your account, use the self-service portal at https://sso.company.internal/unlock or contact the IT Help Desk. Unlocking via portal takes effect immediately. If the account was locked due to a suspected security incident, a manual review by the IT Security team is required before re-activation."
+  },
+  {
+    "id": "new_employee_account",
+    "text": "New employee accounts are provisioned 24 hours before the official start date. The employee will receive a welcome email at their personal address containing their temporary credentials and a link to the onboarding portal. On first login, they must change the temporary password and enroll in Multi-Factor Authentication (MFA). Account provisioning is triggered automatically by HR once the contract is signed in the HR system."
+  },
+  {
+    "id": "mfa_setup",
+    "text": "Multi-Factor Authentication (MFA) is mandatory for all company accounts. Supported authenticator apps are: Microsoft Authenticator, Google Authenticator, and Authy. To set up MFA, log in to the SSO portal and navigate to Security Settings > MFA Enrollment. Scan the QR code with your authenticator app and confirm with a 6-digit code. Hardware security keys (FIDO2/YubiKey) are also supported for senior engineers and administrators."
+  },
+  {
+    "id": "mfa_lost_device",
+    "text": "If you have lost your MFA device, immediately contact the IT Help Desk at helpdesk@company.com or ext. 1000. Do not attempt to bypass MFA. The IT team will verify your identity using your employee ID and manager confirmation before issuing temporary backup codes. A new MFA enrollment will be required within 24 hours of receiving backup codes."
+  },
+  {
+    "id": "vpn_setup_windows",
+    "text": "To connect to the company VPN on Windows, download the GlobalProtect client from https://vpn.company.internal/download. Install with administrator privileges. On first launch, enter the gateway address: vpn.company.internal. Authenticate using your SSO credentials and your MFA code. VPN is required when accessing internal resources (code repositories, file servers, internal dashboards) from outside the office network."
+  },
+  {
+    "id": "vpn_setup_mac",
+    "text": "On macOS, download the GlobalProtect VPN client from https://vpn.company.internal/download. After installation, go to System Preferences > Security & Privacy and allow the GlobalProtect network extension. Enter the gateway: vpn.company.internal. Use your SSO credentials and MFA to authenticate. If the connection drops repeatedly, check that your macOS version is 12 (Monterey) or higher, as older versions are not supported."
+  },
+  {
+    "id": "vpn_slow_connection",
+    "text": "If the VPN connection is slow, try switching between the two available gateway modes: Full Tunnel (all traffic routed through VPN) and Split Tunnel (only company traffic routed through VPN). Split Tunnel is recommended for video calls and large file downloads. To switch mode, disconnect from VPN, right-click the GlobalProtect icon in the system tray, select Settings > Connection, and choose the preferred mode."
+  },
+  {
+    "id": "wifi_office",
+    "text": "The office provides two Wi-Fi networks: CORP-INTERNAL (for company devices only, requires certificate authentication) and CORP-GUEST (for personal devices and visitors, internet access only). To connect a new company device to CORP-INTERNAL, submit a device registration request via the IT portal at https://it.company.internal/device-register. Guest Wi-Fi password is rotated every Monday and is posted on the notice board in each office kitchen."
+  },
+  {
+    "id": "laptop_request",
+    "text": "New laptop requests must be submitted via the IT portal at https://it.company.internal/hardware-request. Standard lead time is 5 business days. Available configurations are: (1) Standard — 16GB RAM, 512GB SSD, suitable for most roles; (2) Developer — 32GB RAM, 1TB SSD, dedicated GPU, for engineering and data roles; (3) Designer — 16GB RAM, 1TB SSD, calibrated display, for design roles. Requests require manager approval before processing."
+  },
+  {
+    "id": "hardware_malfunction",
+    "text": "If your company laptop or peripheral malfunctions, open a hardware ticket at https://it.company.internal/tickets. Include the device serial number (found on the bottom label or in System Information), a description of the issue, and whether the issue is blocking your work. For P1 (work-blocking) issues, a replacement device can be issued within 4 business hours from the IT equipment room on Floor 3. Non-blocking issues are resolved within 3 business days."
+  },
+  {
+    "id": "monitor_request",
+    "text": "Each employee is entitled to one external monitor as part of the standard workstation setup. Additional monitors or ergonomic peripherals (standing desk converters, ergonomic keyboards, etc.) can be requested via the IT portal and require manager approval. Monitor models available: Dell 27-inch 4K (P2723D) and LG 27-inch UltraWide (27WN880). For home office setups, a one-time home equipment allowance of €200 is available; contact hr@company.com for details."
+  },
+  {
+    "id": "software_install",
+    "text": "Employees can install approved software from the Company Software Catalog at https://software.company.internal. No administrator password is required for catalog software. To request installation of software not in the catalog, submit a Software Request form including the business justification and software vendor details. Security review takes 3-7 business days. Installing unlicensed or unapproved software on company devices is a violation of the Acceptable Use Policy."
+  },
+  {
+    "id": "ide_licenses",
+    "text": "The company provides licenses for the following IDEs and development tools: JetBrains Suite (IntelliJ, PyCharm, WebStorm, DataGrip — all roles in Engineering), Visual Studio Code (all employees, free), GitHub Copilot (Engineering and Data teams), Postman Pro (Engineering), and Figma (Design and Product teams). To activate a JetBrains license, log in to JetBrains Toolbox using your company email. GitHub Copilot access is enabled by default for all engineers; contact your team lead if it is not active."
+  },
+  {
+    "id": "zoom_license",
+    "text": "All employees have a Zoom Pro license linked to their company email. Zoom is the primary tool for video conferencing, 1:1s, and all-hands meetings. To use Zoom, sign in at zoom.us using SSO (click 'Sign in with SSO' and enter your company domain). Zoom Rooms are available in all meeting rooms; to book a room with Zoom capability, use the room booking system at https://rooms.company.internal. Zoom recordings are stored in the company Zoom cloud for 90 days."
+  },
+  {
+    "id": "slack_workspace",
+    "text": "The company Slack workspace is at company.slack.com. New employees are added automatically on their start date. Key channels to join: #general (company-wide announcements), #it-support (non-urgent IT questions), #engineering (for the engineering team), #random (social). Direct messages to IT Help Desk can be sent to the @helpdesk-bot Slack app for ticket creation. Slack is available on desktop and mobile; use your SSO credentials to sign in."
+  },
+  {
+    "id": "email_setup",
+    "text": "Company email is hosted on Google Workspace (Gmail). Your company email address follows the format firstname.lastname@company.com. To set up email on your mobile device, add a Google account using your company credentials. For Outlook users, configure IMAP with server imap.gmail.com (port 993, SSL) or use the Google Workspace Sync for Microsoft Outlook (GWSMO) plugin available in the Software Catalog. Email signature templates are available at https://it.company.internal/email-signature."
+  },
+  {
+    "id": "onboarding_checklist",
+    "text": "IT onboarding checklist for new employees: (1) Activate your account and change temporary password; (2) Enroll in MFA; (3) Connect to CORP-INTERNAL Wi-Fi; (4) Install and connect GlobalProtect VPN; (5) Set up Google Workspace (Gmail, Drive, Calendar); (6) Join the company Slack workspace; (7) Install required software from the Software Catalog; (8) Complete the mandatory IT Security Awareness training at https://training.company.internal (deadline: within first 7 days)."
+  },
+  {
+    "id": "offboarding_process",
+    "text": "When an employee leaves the company, their IT account is deactivated on their last working day at 18:00 CET. Company devices must be returned to IT on or before the last working day. Data stored in company Google Drive is transferred to the employee's manager. Slack and email access are revoked immediately upon deactivation. If personal files need to be retrieved before deactivation, the employee must submit a request to hr@company.com at least 3 business days before the departure date."
+  },
+  {
+    "id": "data_backup",
+    "text": "All company data must be stored in approved cloud storage: Google Drive for documents and files, or GitHub/GitLab for code. Local storage on laptops is not backed up by IT. Google Drive provides unlimited storage for all employees. Sensitive data classified as Confidential or Restricted must not be stored on personal devices or unapproved cloud services (Dropbox, personal Google Drive, iCloud, etc.). Automatic backup of company laptops is not provided; employees are responsible for ensuring their work is saved to Google Drive."
+  },
+  {
+    "id": "printer_setup",
+    "text": "Office printers are available on each floor and support AirPrint (macOS/iOS) and IPP (Windows/Android). To add a printer on Windows, go to Settings > Printers & Scanners > Add a printer and select your floor printer from the list (printers are named by floor: PRINTER-F1, PRINTER-F2, etc.). On macOS, go to System Preferences > Printers & Scanners > Add. You must be connected to CORP-INTERNAL Wi-Fi or VPN to access printers. A4 paper and toner refills are managed by the Office Manager (office@company.com)."
+  },
+  {
+    "id": "security_incident",
+    "text": "If you suspect a security incident — such as a phishing email, malware infection, suspicious account activity, or a lost/stolen device — report it immediately to the IT Security team at security@company.com or ext. 1001. Do not attempt to resolve the incident yourself. For lost or stolen devices, also contact your manager and HR. All security incidents are logged and investigated under the company's Incident Response Policy. Response time for P1 security incidents is 1 hour."
+  },
+  {
+    "id": "phishing_report",
+    "text": "If you receive a suspicious email that may be a phishing attempt, do not click any links or download attachments. Forward the email as an attachment to phishing@company.com. Alternatively, use the 'Report Phishing' button in Gmail (available via the Google Workspace add-on installed by IT). The IT Security team will investigate and send a company-wide warning if the threat is confirmed. Never provide your credentials in response to an email request, even if it appears to come from a colleague or IT."
+  },
+  {
+    "id": "acceptable_use_policy",
+    "text": "Company devices and IT resources are provided for business use. Limited personal use is permitted provided it does not interfere with work or violate any policy. Prohibited activities include: installing unlicensed software, accessing illegal content, sharing company credentials, disabling security software, and using company email for personal business. The full Acceptable Use Policy is available on the company intranet at https://intranet.company.internal/policies/aup. Violations may result in disciplinary action."
+  },
+  {
+    "id": "two_factor_policy",
+    "text": "Multi-Factor Authentication (MFA) is mandatory for all company accounts without exception, including contractors and external collaborators. MFA must be active on SSO, GitHub, Google Workspace, and any other company application that supports it. Disabling MFA without IT approval is a security policy violation. Temporary MFA bypass codes may be issued by IT in exceptional circumstances and are valid for a maximum of 24 hours."
+  },
+  {
+    "id": "remote_work_policy",
+    "text": "Employees may work remotely up to 3 days per week unless otherwise specified in their employment contract. When working remotely, VPN must be used to access all internal company resources. Company devices must not be used on public Wi-Fi networks without VPN active. Home network security is the employee's responsibility; IT recommends using a WPA3-secured router and keeping home devices updated. Remote work from abroad (outside the country of employment) requires prior approval from HR and IT Security."
+  },
+  {
+    "id": "ticket_priorities",
+    "text": "IT Help Desk tickets are prioritised as follows: P1 Critical (system down, work fully blocked, security incident) — response within 1 hour, resolution target 4 hours; P2 High (major functionality impaired, affects multiple users) — response within 2 hours, resolution target 8 hours; P3 Normal (minor issue, workaround available) — response within 8 hours, resolution target 3 business days; P4 Low (general questions, feature requests) — response within 1 business day, resolution target 5 business days."
+  },
+  {
+    "id": "helpdesk_hours",
+    "text": "The IT Help Desk is available Monday to Friday, 08:00 to 18:00 CET. Outside business hours, urgent P1 issues can be reported via the on-call line at ext. 1002 or oncall-it@company.com. The on-call team handles only critical incidents outside business hours. Non-urgent requests submitted outside business hours will be processed on the next business day. The Help Desk is closed on public holidays; a list of company holidays is published on the intranet."
+  },
+  {
+    "id": "github_access",
+    "text": "Company code repositories are hosted on GitHub Enterprise at https://github.company.internal. Access is granted based on your team and role; your team lead will add you to the relevant GitHub organisation and repositories on your start date. Two-Factor Authentication (2FA) is enforced on all GitHub accounts. To use GitHub from the command line, generate a Personal Access Token (PAT) with the required scopes at https://github.company.internal/settings/tokens. Do not use your SSO password as the Git credential."
+  },
+  {
+    "id": "asset_tracking",
+    "text": "All company IT assets (laptops, monitors, phones, peripherals) are registered in the IT Asset Management system at https://assets.company.internal. Each asset has a unique asset tag (a sticker on the device). When you receive a new device, confirm receipt in the asset management system within 48 hours. When returning a device (offboarding, replacement), obtain a return confirmation receipt from IT. Employees are responsible for the devices assigned to them; damage beyond normal wear may result in a cost recovery charge."
+  }
+]
