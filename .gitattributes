@@ -1,0 +1,16 @@
+# Deterministic line endings across platforms.
+
+# Default: treat as text, normalise to LF in the repository.
+* text=auto eol=lf
+
+# Windows batch files must use CRLF on checkout.
+*.bat text eol=crlf
+
+# Unix shell launchers must use LF on checkout.
+*.command text eol=lf
+*.sh      text eol=lf
+
+# Binary assets — never modify.
+*.png binary
+*.jpg binary
+*.ico binary
