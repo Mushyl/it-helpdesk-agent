@@ -6,7 +6,8 @@
 ![Anthropic Claude](https://img.shields.io/badge/LLM-Claude%20Sonnet%204.6-8A2BE2)
 ![RAG](https://img.shields.io/badge/Architecture-RAG-success)
 ![Embeddings](https://img.shields.io/badge/Embeddings-sentence--transformers-orange)
-![Tests](https://img.shields.io/badge/tests-24%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-34%20passing-brightgreen)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 <!--
@@ -70,9 +71,11 @@ flowchart LR
 | 🛡️ **Security policy enforcer** | `SECURITY` requests are flagged (`security_flag: true`) in the audit log |
 | 🕳️ **Knowledge-gap tracking** | Best similarity score < 0.3 → `low_confidence: true` (KB coverage gap) |
 | ⏱️ **SLA tracker** | End-to-end latency recorded as `response_time_ms` per run |
-| ♻️ **Graceful degradation** | Keyword fallback classifier + safe fallback reply on API failure |
+| ♻️ **Graceful degradation** | Bilingual (EN/IT) keyword fallback classifier + safe fallback reply on API failure |
+| 🌍 **Cross-lingual RAG** | Multilingual embeddings: questions in Italian (or 50+ languages) retrieve the right English KB docs, and the reply comes back in the user's language |
 | 🧾 **Full auditability** | Every run persisted to `runs/run_*.json` and `runs/reply_*.txt` |
 | 🔒 **Local embeddings** | `sentence-transformers` runs on-device — no embedding data leaves the machine |
+| ⚙️ **12-factor config** | Models, top-k, thresholds and timeouts overridable via env vars — zero code changes |
 
 ---
 
@@ -96,13 +99,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create a `key.env` file in the project root:
+Copy `key.env.example` to `key.env` and paste your API key:
 
 ```env
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-> `key.env` is git-ignored. It is the single source of truth for the API key.
+> `key.env` is git-ignored. It is the single source of truth for the API key
+> and for any optional configuration override.
+
+> **Note:** the first query downloads the multilingual embedding model
+> (~470 MB) from Hugging Face — one time only, then it is cached locally.
 
 ## Usage
 
@@ -155,7 +162,35 @@ reporting this immediately.
 ```
 
 Every detail in the reply (the email, the extension, the SLA) comes **only**
-from the knowledge base — nothing is fabricated.
+from the knowledge base — nothing is fabricated. Employees can write in
+Italian or English: retrieval is cross-lingual and the reply mirrors the
+language of the request.
+
+### Docker
+
+```bash
+docker build -t it-helpdesk-agent .
+docker run -e ANTHROPIC_API_KEY=sk-ant-... -p 8501:8501 it-helpdesk-agent
+```
+
+The image bundles the embedding model, so containers serve the UI on
+`http://localhost:8501` with no cold-start download.
+
+---
+
+## Configuration
+
+Every knob is an environment variable (set it in the shell or in `key.env`) —
+see [src/config.py](src/config.py):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `HELPDESK_LLM_MODEL` | `claude-sonnet-4-6` | Claude model for classification & replies |
+| `HELPDESK_LLM_TIMEOUT` | `30` | Per-request timeout (seconds) |
+| `HELPDESK_LLM_MAX_RETRIES` | `2` | Automatic retries on API errors |
+| `HELPDESK_EMBEDDING_MODEL` | `paraphrase-multilingual-MiniLM-L12-v2` | Local embedding model |
+| `HELPDESK_TOP_K` | `3` | KB documents retrieved per query |
+| `HELPDESK_LOW_CONFIDENCE_THRESHOLD` | `0.30` | Cosine score below which a run is flagged `low_confidence` |
 
 ---
 
@@ -168,19 +203,22 @@ it-helpdesk-agent/
 │   ├── runs/                 # Auto-generated audit reports (git-ignored)
 │   ├── app.py                # Streamlit web frontend (recommended)
 │   ├── main.py               # CLI entry point
-│   ├── agent.py              # Pipeline orchestrator + SLA timing
-│   ├── api_client.py         # Anthropic client (singleton)
+│   ├── config.py             # Central config — env-var overridable
+│   ├── agent.py              # Pipeline orchestrator + audit signals
+│   ├── api_client.py         # Anthropic client (singleton, timeout, retries)
 │   ├── prompts.py            # Classifier & reply prompt templates
-│   ├── classifier.py         # Claude classification + keyword fallback
-│   ├── retrieval.py          # RAG: local embeddings + similarity
+│   ├── classifier.py         # Claude classification + bilingual keyword fallback
+│   ├── retrieval.py          # RAG: multilingual local embeddings (cosine)
 │   ├── draft_reply.py        # Grounded reply generation
 │   └── reporting.py          # JSON/TXT audit persistence
-├── tests/                    # pytest suite (24 tests, run offline)
+├── tests/                    # pytest suite (34 tests, run offline)
 ├── .github/workflows/ci.yml  # GitHub Actions: runs the tests on every push
+├── Dockerfile                # Self-contained container image
 ├── start.bat                 # Windows launcher (double-click)
 ├── start.command             # macOS / Linux launcher (double-click)
 ├── requirements.txt          # Runtime dependencies
 ├── requirements-dev.txt      # + pytest, for development & CI
+├── key.env.example           # Template for secrets & config overrides
 ├── key.env                   # API key (git-ignored)
 └── README.md
 ```
@@ -190,8 +228,8 @@ it-helpdesk-agent/
 | Choice | Why |
 |---|---|
 | **Claude Sonnet 4.6** | Strong instruction-following — critical for strict no-hallucination guardrails |
-| **sentence-transformers (all-MiniLM-L6-v2)** | Fast, free, **local** embeddings — no data leaves the machine, no per-call cost |
-| **NumPy dot-product** | Embeddings are normalized; dot product = cosine similarity, zero extra deps |
+| **sentence-transformers (paraphrase-multilingual-MiniLM-L12-v2)** | Free, **local**, multilingual embeddings — Italian questions match the English KB, no data leaves the machine |
+| **NumPy dot-product** | Embeddings are explicitly L2-normalised at encode time, so dot product = cosine similarity, zero extra deps |
 | **Singleton caching** | API client, model, KB, and KB embeddings are loaded once and reused |
 | **`logging` everywhere** | Production-grade observability; no stray `print()` in library code |
 | **python-dotenv** | Secrets stay out of source control |
@@ -225,14 +263,29 @@ pytest
 ```
 
 ```
-24 passed in ~5s
+34 passed
 ```
 
 Tests cover: defensive JSON parsing, classification normalisation, the bilingual
 keyword fallback (incl. a regression test for Italian security messages), the
-three audit signals (`security_flag`, `low_confidence`, `response_time_ms`), the
-grounded-reply fallback, and the end-to-end orchestration wiring. Every push runs
-them automatically via GitHub Actions.
+RAG top-k selection and caching (with a stubbed embedding model), the three
+audit signals (`security_flag`, `low_confidence`, `response_time_ms`), the
+grounded-reply fallback, and the end-to-end orchestration wiring. Every push
+runs them automatically via GitHub Actions.
+
+## Roadmap
+
+Honest about what this is *not* yet — and what turning it into a production
+service would look like:
+
+- **REST API (FastAPI)** on top of `SupportAgent`, for integration with
+  ticketing systems and chat platforms.
+- **Persistent vector index** (FAISS / Chroma) — at 30 documents a full scan
+  is optimal; at tens of thousands an ANN index becomes necessary.
+- **Conversation memory** — today each request is stateless by design.
+- **Evaluation harness** — automated groundedness / retrieval-recall scoring
+  on a labelled test set, beyond the current `low_confidence` heuristic.
+- **AuthN/Z & multi-tenancy** for a real SaaS deployment.
 
 ## Ethical considerations
 
