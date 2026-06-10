@@ -50,6 +50,11 @@ def _print_result(result) -> None:
     print(f"  CATEGORY : {result.label}")
     print(f"  URGENCY  : {result.urgency}")
     print(f"  SUMMARY  : {result.summary}")
+    print(f"  TIME     : {result.response_time_ms:.0f} ms")
+    if result.security_flag:
+        print("  FLAG     : SECURITY incident — escalation recommended")
+    if result.low_confidence:
+        print("  FLAG     : LOW CONFIDENCE — knowledge base may lack coverage")
     print("-" * 60)
     print("  REPLY:")
     print("-" * 60)

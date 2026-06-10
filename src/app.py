@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st
 
+import config
 from agent import SupportAgent
 
 # ---------------------------------------------------------------------------
@@ -40,6 +41,7 @@ for _noisy in ("httpx", "huggingface_hub", "sentence_transformers", "urllib3"):
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="IT Help Desk Agent",
+    page_icon="🛠️",
     layout="centered",
 )
 
@@ -48,15 +50,15 @@ URGENCY_COLOR = {"LOW": "green", "MEDIUM": "orange", "HIGH": "red"}
 EXAMPLES = [
     "I can't connect to the VPN from home, I've been trying all morning and nothing works.",
     "URGENT: I clicked on a phishing link and now my screen is doing weird things.",
-    "Where can I find the Wi-Fi password for the guest network?",
+    "Come faccio a richiedere un secondo monitor per la mia postazione?",
     "URGENTE: ho cliccato su un link sospetto, il portatile si comporta in modo strano.",
 ]
 
 
 @st.cache_resource(show_spinner=False)
 def get_agent() -> SupportAgent:
-    """Build the agent once and reuse across reruns (caches model + embeddings)."""
-    return SupportAgent(top_k=3)
+    """Build the agent once per server process (caches model + embeddings)."""
+    return SupportAgent()
 
 
 # ---------------------------------------------------------------------------
@@ -78,11 +80,8 @@ def _clear_all() -> None:
 # Rendering helpers
 # ---------------------------------------------------------------------------
 def _render_result(result) -> None:
-    """Render the agent result with classification, reply and audit signals."""
+    """Render classification badges, audit banners, reply and tech details."""
     urgency_color = URGENCY_COLOR.get(result.urgency, "gray")
-    security_flag = result.label == "SECURITY"
-    top_score = result.scores[0] if result.scores else 0.0
-    low_confidence = top_score < 0.3
 
     c1, c2 = st.columns(2)
     c1.markdown(f"**Categoria** &nbsp;&nbsp; :blue[**{result.label}**]")
@@ -90,27 +89,30 @@ def _render_result(result) -> None:
 
     st.caption(result.summary)
 
-    if security_flag:
+    if result.security_flag:
         st.warning(
-            "**Segnalazione di sicurezza** — questa richiesta e' stata "
-            "classificata come incidente di sicurezza e tracciata di "
-            "conseguenza nel report di audit."
+            "**Segnalazione di sicurezza** — la richiesta è stata classificata "
+            "come incidente di sicurezza e tracciata nel report di audit."
         )
-    if low_confidence:
+    if result.low_confidence:
         st.info(
             "**Confidenza bassa** — la knowledge base contiene poche "
-            "informazioni rilevanti per questa richiesta. Potrebbe servire un "
-            "intervento manuale o l'aggiunta di nuovi documenti alla KB."
+            "informazioni rilevanti per questa richiesta: è consigliata "
+            "una verifica manuale."
         )
 
     st.divider()
     st.subheader("Risposta")
     st.markdown(result.reply)
+    st.caption(
+        f"Generata in {result.response_time_ms / 1000:.1f} s · "
+        f"{len(result.top_k)} documenti consultati"
+    )
 
     with st.expander("Dettagli tecnici"):
         st.markdown("**Documenti recuperati dalla knowledge base**")
         for doc_id, score in zip(result.top_k, result.scores):
-            st.markdown(f"- `{doc_id}` &nbsp;&nbsp; similarita' `{score:.4f}`")
+            st.markdown(f"- `{doc_id}` &nbsp;&nbsp; similarità `{score:.4f}`")
         st.markdown("**File di report salvati**")
         st.code(result.report_paths["report_json"], language="text")
         st.code(result.report_paths["reply_txt"], language="text")
@@ -127,10 +129,9 @@ def main() -> None:
     with st.sidebar:
         st.header("IT Help Desk Agent")
         st.caption(
-            "Risposte IT istantanee, basate solo sui documenti aziendali "
-            "ufficiali (RAG). Supporta inglese e italiano; la knowledge base "
-            "e' in inglese, quindi le risposte piu' precise si ottengono con "
-            "domande in inglese."
+            "Risposte IT immediate, basate esclusivamente sui documenti "
+            "aziendali ufficiali (RAG). Il retrieval è cross-lingua: puoi "
+            "scrivere in italiano o in inglese."
         )
         st.divider()
         st.subheader("Esempi rapidi")
@@ -146,9 +147,10 @@ def main() -> None:
         st.divider()
         st.caption(
             "L'agente classifica la richiesta, recupera dalla knowledge base "
-            "i documenti piu' rilevanti e genera una risposta vincolata a "
+            "i documenti più rilevanti e genera una risposta vincolata a "
             "quei documenti. Ogni richiesta viene salvata su disco per audit."
         )
+        st.caption(f"v{config.APP_VERSION} · MIT License")
 
     # ---------- Main area ----------
     st.title("IT Help Desk Support Agent")
@@ -181,7 +183,7 @@ def main() -> None:
                 st.session_state["result"] = get_agent().run(message)
         except Exception as exc:
             st.session_state["result"] = None
-            st.error(f"Si e' verificato un errore durante l'elaborazione: {exc}")
+            st.error(f"Si è verificato un errore durante l'elaborazione: {exc}")
 
     if st.session_state["result"] is not None:
         st.divider()

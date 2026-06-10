@@ -3,9 +3,9 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+import config
 
-_LOW_CONFIDENCE_THRESHOLD = 0.3
+logger = logging.getLogger(__name__)
 
 
 def save_run_report(
@@ -53,7 +53,7 @@ def save_run_report(
     label = str(classification.get("label", "GENERAL")).upper()
     security_flag = label == "SECURITY"
     top_score = scores[0] if scores else 0.0
-    low_confidence = top_score < _LOW_CONFIDENCE_THRESHOLD
+    low_confidence = top_score < config.LOW_CONFIDENCE_THRESHOLD
 
     if security_flag:
         logger.warning(
@@ -65,7 +65,7 @@ def save_run_report(
             "Low retrieval confidence (top score %.4f < %.2f) — "
             "possible knowledge base gap for: %.60s...",
             top_score,
-            _LOW_CONFIDENCE_THRESHOLD,
+            config.LOW_CONFIDENCE_THRESHOLD,
             user_message,
         )
 

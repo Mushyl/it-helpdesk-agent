@@ -2,6 +2,7 @@ import logging
 import time
 from dataclasses import dataclass
 
+import config
 from classifier import classify_message
 from draft_reply import draft_reply
 from reporting import save_run_report
@@ -21,7 +22,10 @@ class AgentResult:
     reply: str
     top_k: list[str]
     scores: list[float]
-    report_paths: dict  # {"report_json": "...", "reply_txt": "..."}
+    security_flag: bool       # request classified as a security incident
+    low_confidence: bool      # best RAG score below the configured threshold
+    response_time_ms: float   # end-to-end pipeline latency
+    report_paths: dict        # {"report_json": "...", "reply_txt": "..."}
 
 
 class SupportAgent:
@@ -30,8 +34,8 @@ class SupportAgent:
     classify -> retrieve context (RAG) -> draft reply -> save report.
     """
 
-    def __init__(self, top_k: int = 3) -> None:
-        self.top_k = top_k
+    def __init__(self, top_k: int | None = None) -> None:
+        self.top_k = top_k if top_k is not None else config.TOP_K
 
     def run(self, user_message: str) -> AgentResult:
         """
@@ -41,8 +45,8 @@ class SupportAgent:
             user_message: The raw message written by the employee.
 
         Returns:
-            An AgentResult with the classification, RAG context,
-            drafted reply, and the paths of the persisted report.
+            An AgentResult with the classification, RAG context, drafted
+            reply, audit signals and the paths of the persisted report.
 
         Raises:
             Exception: Any unrecoverable pipeline error is logged and
@@ -57,7 +61,7 @@ class SupportAgent:
             classification = classify_message(user_message)
 
             logger.info("Step 2/4 — Retrieving context (top_k=%d)...", self.top_k)
-            retrieval = retrieve_context(user_message, top_k=self.top_k)
+            retrieval_out = retrieve_context(user_message, top_k=self.top_k)
 
             logger.info("Step 3/4 — Drafting reply...")
             reply = draft_reply(
@@ -65,8 +69,13 @@ class SupportAgent:
                 label=classification["label"],
                 urgency=classification["urgency"],
                 summary=classification["summary"],
-                context=retrieval["context"],
+                context=retrieval_out["context"],
             )
+
+            # Audit signals — same definitions persisted by reporting.py.
+            security_flag = classification["label"] == "SECURITY"
+            top_score = retrieval_out["scores"][0] if retrieval_out["scores"] else 0.0
+            low_confidence = top_score < config.LOW_CONFIDENCE_THRESHOLD
 
             response_time_ms = round((time.perf_counter() - start) * 1000, 2)
 
@@ -74,10 +83,10 @@ class SupportAgent:
             report_paths = save_run_report(
                 user_message=user_message,
                 classification=classification,
-                context=retrieval["context"],
+                context=retrieval_out["context"],
                 reply=reply,
-                top_k=retrieval["top_k"],
-                scores=retrieval["scores"],
+                top_k=retrieval_out["top_k"],
+                scores=retrieval_out["scores"],
                 response_time_ms=response_time_ms,
             )
 
@@ -89,10 +98,13 @@ class SupportAgent:
                 label=classification["label"],
                 urgency=classification["urgency"],
                 summary=classification["summary"],
-                context=retrieval["context"],
+                context=retrieval_out["context"],
                 reply=reply,
-                top_k=retrieval["top_k"],
-                scores=retrieval["scores"],
+                top_k=retrieval_out["top_k"],
+                scores=retrieval_out["scores"],
+                security_flag=security_flag,
+                low_confidence=low_confidence,
+                response_time_ms=response_time_ms,
                 report_paths=report_paths,
             )
 
