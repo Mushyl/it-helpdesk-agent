@@ -1,16 +1,11 @@
 import logging
 import os
-from pathlib import Path
 
 import anthropic
-from dotenv import load_dotenv
+
+import config
 
 logger = logging.getLogger(__name__)
-
-_ENV_PATH = Path(__file__).parent.parent / "key.env"
-# override=True: key.env is the single source of truth, even if a
-# stale/empty ANTHROPIC_API_KEY already exists in the environment.
-load_dotenv(dotenv_path=_ENV_PATH, override=True)
 
 _client: anthropic.Anthropic | None = None
 
@@ -25,14 +20,18 @@ def _get_client() -> anthropic.Anthropic:
                 "ANTHROPIC_API_KEY not found. "
                 "Make sure key.env exists in the project root and contains the key."
             )
-        _client = anthropic.Anthropic(api_key=api_key)
+        _client = anthropic.Anthropic(
+            api_key=api_key,
+            timeout=config.LLM_TIMEOUT_SECONDS,
+            max_retries=config.LLM_MAX_RETRIES,
+        )
         logger.debug("Anthropic client initialised successfully.")
     return _client
 
 
 def chat(
     messages: list[dict],
-    model: str = "claude-sonnet-4-6",
+    model: str = config.ANTHROPIC_MODEL,
     max_tokens: int = 1024,
     temperature: float = 0.2,
 ) -> str:
@@ -42,7 +41,7 @@ def chat(
     Args:
         messages:    List of dicts in Anthropic format:
                      [{"role": "user", "content": "..."}]
-        model:       Claude model identifier.
+        model:       Claude model identifier (default: config.ANTHROPIC_MODEL).
         max_tokens:  Maximum tokens in the response.
         temperature: Sampling temperature (0.0 = deterministic, 1.0 = creative).
 
@@ -50,7 +49,7 @@ def chat(
         The assistant's reply as a plain string.
 
     Raises:
-        anthropic.APIError: If the API call fails.
+        anthropic.APIError: If the API call fails after the configured retries.
         EnvironmentError:   If the API key is missing.
     """
     client = _get_client()
