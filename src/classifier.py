@@ -114,10 +114,20 @@ def _validate_classification(data: dict) -> dict:
     return {"label": label, "urgency": urgency, "summary": summary}
 
 
+_URGENCY_RANK = {"LOW": 0, "MEDIUM": 1, "HIGH": 2}
+
+
 def _keyword_fallback(message: str) -> dict:
     """
     Rule-based classifier used when the Claude API call fails or returns
-    unparseable output. Scans the message for known IT keywords.
+    unparseable output. Scans the message for known IT keywords in both
+    English and Italian.
+
+    Label selection: the first matching rule wins (rules are ordered so
+    that SECURITY signals take precedence over generic words). Urgency:
+    the highest urgency among all matches that agree with the chosen
+    label — so "il portatile e' rotto" is HARDWARE/HIGH ('rotto' wins),
+    not HARDWARE/MEDIUM ('portatile' alone).
 
     Args:
         message: The original employee message (lowercased internally).
@@ -128,18 +138,30 @@ def _keyword_fallback(message: str) -> dict:
     logger.warning("Using keyword fallback classifier.")
     lower = message.lower()
 
-    for keyword, label, urgency in _KEYWORD_RULES:
-        if keyword in lower:
-            return {
-                "label": label,
-                "urgency": urgency,
-                "summary": f"Keyword match: '{keyword}' detected in message.",
-            }
+    matches = [
+        (keyword, label, urgency)
+        for keyword, label, urgency in _KEYWORD_RULES
+        if keyword in lower
+    ]
+
+    if not matches:
+        return {
+            "label": "GENERAL",
+            "urgency": "LOW",
+            "summary": "Unable to classify automatically. Manual review recommended.",
+        }
+
+    label = matches[0][1]
+    same_label = [(kw, urg) for kw, lbl, urg in matches if lbl == label]
+    urgency = max(
+        (urg for _, urg in same_label), key=_URGENCY_RANK.__getitem__
+    )
+    keywords = ", ".join(f"'{kw}'" for kw, _ in same_label)
 
     return {
-        "label": "GENERAL",
-        "urgency": "LOW",
-        "summary": "Unable to classify automatically. Manual review recommended.",
+        "label": label,
+        "urgency": urgency,
+        "summary": f"Keyword match: {keywords} detected in message.",
     }
 
 
@@ -168,7 +190,9 @@ def classify_message(message: str) -> dict:
     messages = [{"role": "user", "content": prompt}]
 
     try:
-        raw_response = chat(messages, temperature=0.0)
+        # max_tokens=300: a classification JSON never needs more — caps the
+        # damage if the model ignores the "JSON only" instruction.
+        raw_response = chat(messages, temperature=0.0, max_tokens=300)
         logger.debug("Raw classifier response: %s", raw_response)
 
         data = _extract_json_from_text(raw_response)
