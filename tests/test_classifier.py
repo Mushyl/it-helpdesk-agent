@@ -80,6 +80,29 @@ def test_keyword_fallback_unknown_returns_general_low():
     assert out["urgency"] == "LOW"
 
 
+def test_keyword_fallback_urgency_uses_strongest_match_italian():
+    """'portatile' alone is MEDIUM, but 'rotto' raises it to HIGH."""
+    out = classifier._keyword_fallback("il portatile e' rotto e non si accende")
+    assert out["label"] == "HARDWARE"
+    assert out["urgency"] == "HIGH"
+
+
+def test_keyword_fallback_urgency_uses_strongest_match_english():
+    """'laptop' alone is MEDIUM, but 'broken' raises it to HIGH."""
+    out = classifier._keyword_fallback("my laptop is broken")
+    assert out["label"] == "HARDWARE"
+    assert out["urgency"] == "HIGH"
+
+
+def test_keyword_fallback_security_takes_precedence():
+    """SECURITY rules are ordered first, so they beat other matches."""
+    out = classifier._keyword_fallback(
+        "ho dimenticato la password e temo sia stata rubata"
+    )
+    assert out["label"] == "SECURITY"
+    assert out["urgency"] == "HIGH"
+
+
 # --------------------------------------------------------------------------
 # classify_message — orchestration with a mocked API
 # --------------------------------------------------------------------------
