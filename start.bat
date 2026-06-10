@@ -31,8 +31,8 @@ if not exist "venv\Scripts\activate.bat" (
 if not exist "key.env" (
     echo [ATTENZIONE] File key.env non trovato nella root del progetto.
     echo Il sistema partira' in modalita' degradata.
-    echo Per ottenere risposte da Claude, crea key.env con:
-    echo     ANTHROPIC_API_KEY=sk-ant-...
+    echo Per ottenere risposte da Claude, copia key.env.example in key.env
+    echo e inserisci la tua chiave ANTHROPIC_API_KEY.
     echo.
 )
 
@@ -40,6 +40,16 @@ echo Attivazione virtual environment...
 call "venv\Scripts\activate.bat"
 if errorlevel 1 (
     echo [ERRORE] Impossibile attivare il virtual environment.
+    pause
+    exit /b 1
+)
+
+python -c "import streamlit" >/dev/null 2>&1
+if errorlevel 1 (
+    echo [ERRORE] Streamlit non risulta installato nel virtual environment.
+    echo Esegui:
+    echo     venv\Scripts\activate
+    echo     pip install -r requirements.txt
     pause
     exit /b 1
 )

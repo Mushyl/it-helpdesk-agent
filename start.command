@@ -27,11 +27,19 @@ fi
 if [ ! -f "key.env" ]; then
     echo ""
     echo "[ATTENZIONE] File 'key.env' non trovato: avvio in modalita' degradata."
+    echo "Copia key.env.example in key.env e inserisci la tua ANTHROPIC_API_KEY."
     echo ""
 fi
 
 # shellcheck disable=SC1091
 source venv/bin/activate
+
+if ! python -c "import streamlit" >/dev/null 2>&1; then
+    echo "[ERRORE] Streamlit non risulta installato nel virtual environment."
+    echo "Esegui:  source venv/bin/activate && pip install -r requirements.txt"
+    read -n 1 -s -r -p "Premi un tasto per chiudere..."
+    exit 1
+fi
 
 echo ""
 echo "============================================================"

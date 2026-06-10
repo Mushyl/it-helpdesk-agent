@@ -1,0 +1,13 @@
+venv/
+.git/
+.github/
+.pytest_cache/
+__pycache__/
+*.pyc
+src/runs/
+tests/
+docs/
+key.env
+*.md
+start.bat
+start.command
