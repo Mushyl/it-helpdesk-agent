@@ -5,6 +5,8 @@ from pathlib import Path
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
+import config
+
 logger = logging.getLogger(__name__)
 
 _KB_PATH = Path(__file__).parent / "kb" / "knowledge.json"
@@ -15,11 +17,21 @@ _kb_embeddings: np.ndarray | None = None
 
 
 def _get_model() -> SentenceTransformer:
-    """Load the embedding model once and reuse it (Singleton pattern)."""
+    """
+    Load the embedding model once and reuse it (Singleton pattern).
+
+    The model name comes from config.EMBEDDING_MODEL. The default is a
+    multilingual model, so questions asked in Italian (or 50+ other
+    languages) still retrieve the right documents from the English
+    knowledge base (cross-lingual retrieval).
+    """
     global _model
     if _model is None:
-        logger.info("Loading embedding model (first call — may take a few seconds)...")
-        _model = SentenceTransformer("all-MiniLM-L6-v2")
+        logger.info(
+            "Loading embedding model '%s' (first call may download it)...",
+            config.EMBEDDING_MODEL,
+        )
+        _model = SentenceTransformer(config.EMBEDDING_MODEL)
         logger.info("Embedding model loaded successfully.")
     return _model
 
@@ -67,6 +79,10 @@ def _get_kb_embeddings() -> np.ndarray:
     """
     Compute and cache the embedding vectors for every KB document.
     Called once on first retrieval, then reused for all subsequent queries.
+
+    Embeddings are L2-normalised, so a plain dot product against an equally
+    normalised query vector is exactly the cosine similarity, regardless of
+    which embedding model is configured.
     """
     global _kb_embeddings
     if _kb_embeddings is not None:
@@ -77,7 +93,12 @@ def _get_kb_embeddings() -> np.ndarray:
 
     texts = [doc["text"] for doc in kb]
     logger.info("Computing embeddings for %d KB documents...", len(texts))
-    _kb_embeddings = model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
+    _kb_embeddings = model.encode(
+        texts,
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
     logger.info("KB embeddings computed — shape: %s", _kb_embeddings.shape)
 
     return _kb_embeddings
@@ -88,8 +109,9 @@ def retrieve_context(query: str, top_k: int = 3) -> dict:
     Find the most relevant knowledge base documents for the given query.
 
     How it works:
-    1. Encode the query into an embedding vector.
-    2. Compute dot-product similarity against every KB document embedding.
+    1. Encode the query into an L2-normalised embedding vector.
+    2. Compute cosine similarity (dot product of normalised vectors)
+       against every KB document embedding.
     3. Select the top_k highest-scoring documents.
     4. Format them into a context string for the reply prompt.
 
@@ -102,7 +124,7 @@ def retrieve_context(query: str, top_k: int = 3) -> dict:
         {
             "context": str,            # Formatted text for the reply prompt
             "top_k":   list[str],      # IDs of the selected documents
-            "scores":  list[float],    # Similarity scores (highest first)
+            "scores":  list[float],    # Cosine similarities (highest first)
         }
     """
     logger.info("Retrieving context for query: %.60s...", query)
@@ -111,7 +133,12 @@ def retrieve_context(query: str, top_k: int = 3) -> dict:
     kb_embeddings = _get_kb_embeddings()
     model = _get_model()
 
-    query_embedding = model.encode([query], convert_to_numpy=True, show_progress_bar=False)
+    query_embedding = model.encode(
+        [query],
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
 
     scores = np.dot(kb_embeddings, query_embedding.T).flatten()
 
@@ -129,9 +156,7 @@ def retrieve_context(query: str, top_k: int = 3) -> dict:
         selected_scores.append(round(score, 4))
         context_parts.append(f"[{doc['id']}] {doc['text']}")
 
-        logger.debug(
-            "  Match: id=%s | score=%.4f", doc["id"], score
-        )
+        logger.debug("  Match: id=%s | score=%.4f", doc["id"], score)
 
     context_string = "\n\n".join(context_parts)
 
