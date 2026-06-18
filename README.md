@@ -6,14 +6,10 @@
 ![Anthropic Claude](https://img.shields.io/badge/LLM-Claude%20Sonnet%204.6-8A2BE2)
 ![RAG](https://img.shields.io/badge/Architecture-RAG-success)
 ![Embeddings](https://img.shields.io/badge/Embeddings-sentence--transformers-orange)
+[![CI](https://github.com/Mushyl/it-helpdesk-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Mushyl/it-helpdesk-agent/actions/workflows/ci.yml)
 ![Tests](https://img.shields.io/badge/tests-34%20passing-brightgreen)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
-
-<!--
-After pushing to GitHub, add the live CI badge (replace YOUR-USERNAME):
-[![CI](https://github.com/YOUR-USERNAME/it-helpdesk-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR-USERNAME/it-helpdesk-agent/actions/workflows/ci.yml)
--->
 
 ---
 
@@ -87,7 +83,7 @@ flowchart LR
 ## Installation
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Mushyl/it-helpdesk-agent.git
 cd it-helpdesk-agent
 
 python -m venv venv
