@@ -62,6 +62,7 @@ def _print_result(result) -> None:
     print("=" * 60)
     print(f"  Report JSON : {result.report_paths['report_json']}")
     print(f"  Reply  TXT  : {result.report_paths['reply_txt']}")
+    print("  Tickets     : Jira + ServiceNow payloads embedded in the JSON report")
     print("=" * 60 + "\n")
 
 

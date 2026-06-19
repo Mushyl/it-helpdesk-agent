@@ -17,6 +17,7 @@ def save_run_report(
     scores: list[float],
     out_dir: str = "runs",
     response_time_ms: float | None = None,
+    tickets: dict | None = None,
 ) -> dict:
     """
     Persist a full record of a single agent run to disk for auditing.
@@ -76,6 +77,7 @@ def save_run_report(
         "reply": reply,
         "security_flag": security_flag,
         "low_confidence": low_confidence,
+        "tickets": tickets,
         "meta": {
             "timestamp": timestamp,
             "top_k": top_k,

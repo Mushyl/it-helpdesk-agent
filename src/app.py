@@ -10,6 +10,7 @@ agent.py and its sibling modules. The frontend only handles input, output
 and the visual representation of the audit signals.
 """
 
+import json
 import logging
 import sys
 from pathlib import Path
@@ -107,6 +108,23 @@ def _render_result(result) -> None:
     st.caption(
         f"Generata in {result.response_time_ms / 1000:.1f} s · "
         f"{len(result.top_k)} documenti consultati"
+    )
+
+    st.markdown("**Esporta come ticket**")
+    tc1, tc2 = st.columns(2)
+    tc1.download_button(
+        "⬇️ Jira (JSON)",
+        data=json.dumps(result.tickets["jira"], indent=2, ensure_ascii=False),
+        file_name="ticket_jira.json",
+        mime="application/json",
+        use_container_width=True,
+    )
+    tc2.download_button(
+        "⬇️ ServiceNow (JSON)",
+        data=json.dumps(result.tickets["servicenow"], indent=2, ensure_ascii=False),
+        file_name="ticket_servicenow.json",
+        mime="application/json",
+        use_container_width=True,
     )
 
     with st.expander("Dettagli tecnici"):

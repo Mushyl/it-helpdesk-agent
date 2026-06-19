@@ -39,3 +39,12 @@ TOP_K = int(os.getenv("HELPDESK_TOP_K", "3"))
 LOW_CONFIDENCE_THRESHOLD = float(
     os.getenv("HELPDESK_LOW_CONFIDENCE_THRESHOLD", "0.30")
 )
+
+# --- Ticketing (Jira / ServiceNow export) -----------------------------------
+JIRA_PROJECT_KEY = os.getenv("HELPDESK_JIRA_PROJECT_KEY", "IT")
+
+# --- Slack bot --------------------------------------------------------------
+# Needed only to run the Slack bot (src/slack_bot.py), in Socket Mode.
+# SLACK_BOT_TOKEN starts with "xoxb-", SLACK_APP_TOKEN with "xapp-".
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
+SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN")

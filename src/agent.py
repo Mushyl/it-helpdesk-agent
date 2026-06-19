@@ -3,6 +3,7 @@ import time
 from dataclasses import dataclass
 
 import config
+import ticketing
 from classifier import classify_message
 from draft_reply import draft_reply
 from reporting import save_run_report
@@ -25,6 +26,7 @@ class AgentResult:
     security_flag: bool       # request classified as a security incident
     low_confidence: bool      # best RAG score below the configured threshold
     response_time_ms: float   # end-to-end pipeline latency
+    tickets: dict             # ready-to-POST Jira / ServiceNow payloads
     report_paths: dict        # {"report_json": "...", "reply_txt": "..."}
 
 
@@ -79,6 +81,14 @@ class SupportAgent:
 
             response_time_ms = round((time.perf_counter() - start) * 1000, 2)
 
+            tickets = ticketing.build_tickets(
+                label=classification["label"],
+                urgency=classification["urgency"],
+                summary=classification["summary"],
+                user_message=user_message,
+                reply=reply,
+            )
+
             logger.info("Step 4/4 — Saving run report...")
             report_paths = save_run_report(
                 user_message=user_message,
@@ -88,6 +98,7 @@ class SupportAgent:
                 top_k=retrieval_out["top_k"],
                 scores=retrieval_out["scores"],
                 response_time_ms=response_time_ms,
+                tickets=tickets,
             )
 
             logger.info(
@@ -105,6 +116,7 @@ class SupportAgent:
                 security_flag=security_flag,
                 low_confidence=low_confidence,
                 response_time_ms=response_time_ms,
+                tickets=tickets,
                 report_paths=report_paths,
             )
 
