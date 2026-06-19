@@ -6,3 +6,4 @@ sentence-transformers==5.4.1 # Local embeddings (all-MiniLM-L6-v2)
 numpy==2.4.4                 # Dot-product similarity for RAG retrieval
 python-dotenv==1.2.2         # Loads ANTHROPIC_API_KEY from key.env
 streamlit>=1.32,<2.0         # Web frontend (one-file UI, cross-platform)
+slack-bolt>=1.18,<2.0        # Slack bot front-end (Socket Mode) — src/slack_bot.py
