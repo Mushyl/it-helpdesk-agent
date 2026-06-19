@@ -36,20 +36,19 @@ if not exist "key.env" (
     echo.
 )
 
-echo Attivazione virtual environment...
-call "venv\Scripts\activate.bat"
-if errorlevel 1 (
-    echo [ERRORE] Impossibile attivare il virtual environment.
-    pause
-    exit /b 1
-)
-
-python -c "import streamlit" >/dev/null 2>&1
-if errorlevel 1 (
+if not exist "venv\Scripts\streamlit.exe" (
     echo [ERRORE] Streamlit non risulta installato nel virtual environment.
     echo Esegui:
     echo     venv\Scripts\activate
     echo     pip install -r requirements.txt
+    pause
+    exit /b 1
+)
+
+echo Attivazione virtual environment...
+call "venv\Scripts\activate.bat"
+if errorlevel 1 (
+    echo [ERRORE] Impossibile attivare il virtual environment.
     pause
     exit /b 1
 )
