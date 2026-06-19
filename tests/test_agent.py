@@ -47,6 +47,9 @@ def test_support_agent_run_orchestrates_pipeline(monkeypatch):
     assert result.low_confidence is False
     assert isinstance(result.response_time_ms, float)
     assert result.response_time_ms >= 0
+    # Ticket payloads are built for both ITSM systems.
+    assert set(result.tickets) == {"jira", "servicenow"}
+    assert result.tickets["jira"]["fields"]["summary"] == "s"
 
 
 def test_support_agent_flags_security_and_low_confidence(monkeypatch):
