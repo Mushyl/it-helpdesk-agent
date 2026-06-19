@@ -7,7 +7,8 @@
 ![RAG](https://img.shields.io/badge/Architecture-RAG-success)
 ![Embeddings](https://img.shields.io/badge/Embeddings-sentence--transformers-orange)
 [![CI](https://github.com/Mushyl/it-helpdesk-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Mushyl/it-helpdesk-agent/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-34%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-52%20passing-brightgreen)
+![Slack](https://img.shields.io/badge/Slack-bot-4A154B)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
@@ -42,11 +43,11 @@ It is designed to **degrade gracefully**: if the LLM API is unreachable, a keywo
 
 ```mermaid
 flowchart LR
-    U[Employee message] --> M[main.py]
-    M --> A[SupportAgent]
+    W[Web UI · CLI · Slack bot] --> A[SupportAgent]
     A --> C[classifier.py<br/>Claude + keyword fallback]
-    A --> R[retrieval.py<br/>RAG: local embeddings]
+    A --> R[retrieval.py<br/>RAG: multilingual embeddings]
     A --> D[draft_reply.py<br/>Claude, context-grounded]
+    A --> T[ticketing.py<br/>Jira / ServiceNow JSON]
     A --> P[reporting.py<br/>JSON + TXT audit]
     C -.-> CL[(Claude API)]
     D -.-> CL
@@ -72,6 +73,8 @@ flowchart LR
 | 🧾 **Full auditability** | Every run persisted to `runs/run_*.json` and `runs/reply_*.txt` |
 | 🔒 **Local embeddings** | `sentence-transformers` runs on-device — no embedding data leaves the machine |
 | ⚙️ **12-factor config** | Models, top-k, thresholds and timeouts overridable via env vars — zero code changes |
+| 💬 **Slack bot** | `/helpdesk <question>` slash command answers in-channel with the grounded reply and audit flags (Socket Mode) |
+| 🎫 **Ticket export** | One-click export of each request as a ready-to-POST **Jira** and **ServiceNow** JSON payload |
 
 ---
 
@@ -162,6 +165,26 @@ from the knowledge base — nothing is fabricated. Employees can write in
 Italian or English: retrieval is cross-lingual and the reply mirrors the
 language of the request.
 
+### Slack bot
+
+Add the Slack Socket Mode tokens to `key.env` (see `key.env.example`), then:
+
+- **Windows:** double-click `start-slack.bat`
+- **macOS / Linux:** `start-slack.command` (or `python src/slack_bot.py`)
+
+In any channel, type `/helpdesk <your question>`: the bot replies in-channel
+with the category, urgency, the grounded answer and any security / low-confidence
+flags. It uses **Socket Mode**, so no public URL or inbound webhook is required.
+
+### Ticket export
+
+Every answer can be exported as a ready-to-POST ticket payload for **Jira**
+(`POST /rest/api/3/issue`) and **ServiceNow** (`POST /api/now/table/incident`):
+download buttons in the web UI, and both payloads are also embedded in every
+`runs/run_*.json` audit report. Urgency and category are mapped to each tool's
+native priority/scale (e.g. a `SECURITY`/`HIGH` request becomes a Jira *Incident*
+with *High* priority).
+
 ### Docker
 
 ```bash
@@ -187,6 +210,8 @@ see [src/config.py](src/config.py):
 | `HELPDESK_EMBEDDING_MODEL` | `paraphrase-multilingual-MiniLM-L12-v2` | Local embedding model |
 | `HELPDESK_TOP_K` | `3` | KB documents retrieved per query |
 | `HELPDESK_LOW_CONFIDENCE_THRESHOLD` | `0.30` | Cosine score below which a run is flagged `low_confidence` |
+| `HELPDESK_JIRA_PROJECT_KEY` | `IT` | Jira project key used in exported tickets |
+| `SLACK_BOT_TOKEN` / `SLACK_APP_TOKEN` | — | Slack Socket Mode tokens (only needed to run the bot) |
 
 ---
 
@@ -206,12 +231,16 @@ it-helpdesk-agent/
 │   ├── classifier.py         # Claude classification + bilingual keyword fallback
 │   ├── retrieval.py          # RAG: multilingual local embeddings (cosine)
 │   ├── draft_reply.py        # Grounded reply generation
-│   └── reporting.py          # JSON/TXT audit persistence
-├── tests/                    # pytest suite (34 tests, run offline)
+│   ├── reporting.py          # JSON/TXT audit persistence
+│   ├── ticketing.py          # Jira / ServiceNow ticket payloads
+│   └── slack_bot.py          # Slack bot front-end (Socket Mode)
+├── tests/                    # pytest suite (52 tests, run offline)
 ├── .github/workflows/ci.yml  # GitHub Actions: runs the tests on every push
 ├── Dockerfile                # Self-contained container image
-├── start.bat                 # Windows launcher (double-click)
-├── start.command             # macOS / Linux launcher (double-click)
+├── start.bat                 # Windows launcher — web UI
+├── start.command             # macOS / Linux launcher — web UI
+├── start-slack.bat           # Windows launcher — Slack bot
+├── start-slack.command       # macOS / Linux launcher — Slack bot
 ├── requirements.txt          # Runtime dependencies
 ├── requirements-dev.txt      # + pytest, for development & CI
 ├── key.env.example           # Template for secrets & config overrides
@@ -229,6 +258,7 @@ it-helpdesk-agent/
 | **Singleton caching** | API client, model, KB, and KB embeddings are loaded once and reused |
 | **`logging` everywhere** | Production-grade observability; no stray `print()` in library code |
 | **python-dotenv** | Secrets stay out of source control |
+| **slack-bolt** | Official Slack framework; Socket Mode means no inbound webhook or public URL to operate the bot |
 
 ## How RAG works here
 
@@ -259,23 +289,24 @@ pytest
 ```
 
 ```
-34 passed
+52 passed
 ```
 
 Tests cover: defensive JSON parsing, classification normalisation, the bilingual
 keyword fallback (incl. a regression test for Italian security messages), the
 RAG top-k selection and caching (with a stubbed embedding model), the three
 audit signals (`security_flag`, `low_confidence`, `response_time_ms`), the
-grounded-reply fallback, and the end-to-end orchestration wiring. Every push
-runs them automatically via GitHub Actions.
+grounded-reply fallback, the end-to-end orchestration wiring, the Jira /
+ServiceNow ticket mapping, and the Slack Block Kit formatting. Every push runs
+them automatically via GitHub Actions.
 
 ## Roadmap
 
 Honest about what this is *not* yet — and what turning it into a production
 service would look like:
 
-- **REST API (FastAPI)** on top of `SupportAgent`, for integration with
-  ticketing systems and chat platforms.
+- **REST API (FastAPI)** on top of `SupportAgent`, plus live ticket creation
+  (POST the generated Jira / ServiceNow payloads directly to their REST APIs).
 - **Persistent vector index** (FAISS / Chroma) — at 30 documents a full scan
   is optimal; at tens of thousands an ANN index becomes necessary.
 - **Conversation memory** — today each request is stateless by design.
